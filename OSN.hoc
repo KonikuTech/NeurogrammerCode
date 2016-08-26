@@ -1,0 +1,46 @@
+//olefactory sensory neuron parameters taken from http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.449.5433&rep=rep1&type=pdf
+// cytoplasmic resistivity - http://eneuro.org/content/3/2/ENEURO.0050-15.2016
+
+
+begintemplate OSNCell
+public axon, dend, nclist, soma
+objectvar nclist
+
+create soma, axon, dend[1]
+proc init(){
+	ndend = $1
+	
+	create soma, axon, dend[ndend]
+	
+	nclist = new List()
+
+	soma.nseg = 1  //number of segments
+	soma.diam = 8 // diameter (um) - Science of Olefaction - Serby
+	soma.L =  13// length (um)
+	soma.Ra = 150 // cytoplasmic resistivity (ohm cm)
+	soma.cm = 1 // specific membrane capacitance (uF/cm^2)
+
+	dend[0].nseg = 1
+	dend[0].diam = 2 //Science of Olefaction - Serby
+	dend[0].L = 70
+	dend[0].Ra = 150
+
+	//axon.nseg = 20
+	//axon.diam = .1 // Science of Olefaction - Serby
+	//axon.L =  1000 // http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2776656/  modify this value to increase conduction delay for STICK model
+	//axon.Ra = 150
+
+	dend insert hh
+
+	soma insert hh
+
+	axon insert hh
+	
+	//connect axon
+	//connect axon(0), soma(1)
+	
+	//connect dendrites 
+	connect dend[0](0), soma(0)
+	
+	}
+endtemplate OSNCell
