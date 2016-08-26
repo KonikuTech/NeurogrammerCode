@@ -1,0 +1,105 @@
+load_file("OSN.hoc")
+
+
+nOSNCells = 2
+objectvar First, Input, Last, Acc, Recall, Output
+
+//create new OSNCell object, pass in number of dendrites and axons each cell needs
+	Input = new OSNCell(1)
+
+	First = new OSNCell(1)
+	
+	Last = new OSNCell(1)
+	
+	Acc = new OSNCell(1)
+	
+	Recall = new OSNCell(1)
+	
+	Output = new OSNCell(1)
+	
+	access First.dend[0]
+
+
+objectvar stim1, stim2, stim3
+Input.dend[0] stim1 = new IClamp(0.5)  //current clamp point process at location .5/L on the soma
+
+stim1.del = 0 //delay until stimulus onset (ms)
+stim1.dur = 1 //stimulus duration (ms)
+stim1.amp = .1 //stimulus amplitude (nA)
+
+Input.dend[0] stim2 = new IClamp(0.5)
+stim2.del = 20
+stim2.dur = 1
+stim2.amp = .1
+
+Recall.dend[0] stim3 = new IClamp(.5)
+stim3.del = 100
+stim3.dur = 1
+stim3.amp = .1
+
+objectvar InputToFirst
+First.soma InputToFirst = new hebbsyn(0)
+InputToFirst.e = 0
+InputToFirst.tau = 4
+//synaptic reversal potential is generally 0 mV
+//recall that the biophysical threshhold voltage is -40 mV (depolarization from -60 mV)
+//source, synapse, threshold, delay, synaptic weight
+objref InToFirstnetcon
+Input.soma InToFirstnetcon = new NetCon(&v(1), InputToFirst, -10, 1, 1)
+InToFirstnetcon.weight[0] = .1
+InToFirstnetcon.weight[1] = 0
+
+objectvar InputToLast1
+Last.soma InputToLast1 = new hebbsyn(0)
+//this reversal potential now defines peak height 
+InputToLast1.e = -40
+//tau = how long is the post spike potential held before it begins to decay
+InputToLast1.tau = 4
+
+//larger weight value may mean lower, fatter spikes at postsynaptic soma
+objref InToLastnetcon
+Input.soma InToLastnetcon = new NetCon(&v(1), InputToLast1, -10, 1, 1)
+InToLastnetcon.weight[0] = 0
+InToLastnetcon.weight[1] = .01
+
+objectvar FirstToAcc
+Acc.soma FirstToAcc = new ExpSyn(0)
+FirstToAcc.e = -15
+FirstToAcc.tau = 10
+
+objref FirstToAccnetcon
+First.soma FirstToAccnetcon = new NetCon(&v(1), FirstToAcc, 0, 1, 3) 
+
+
+
+objectvar LastToAcc
+Acc.soma LastToAcc = new Exp2Syn(0)
+LastToAcc.e = 0
+LastToAcc.tau1 = 100
+LastToAcc.tau2 = 50
+objref LastToAccnetcon
+Last.soma LastToAccnetcon = new NetCon(&v(1), LastToAcc, 0, 1, .2)
+
+objectvar RecallToAcc
+Acc.soma RecallToAcc = new Exp2Syn(0)
+RecallToAcc.e = 40
+RecallToAcc.tau1 = 400
+RecallToAcc.tau2 = 1000
+objref RecallToAccnetcon
+Recall.soma RecallToAccnetcon = new NetCon(&v(1), RecallToAcc, 0, 1, 1)
+
+objectvar RecallToOutput
+Output.soma RecallToOutput = new ExpSyn(0)
+RecallToOutput.e = 0
+RecallToOutput.tau = 1
+objref RecallToOutputnetcon
+Recall.soma RecallToOutputnetcon = new NetCon(&v(1), RecallToOutput, 0, 1, .1)
+
+
+objectvar AccToOutput
+Output.soma AccToOutput = new ExpSyn(0)
+RecallToOutput.e = 20
+RecallToOutput.tau = 1
+objref AccToOutputnetcon  
+Acc.soma AccToOutputnetcon = new NetCon(&v(1), AccToOutput, -10, 1, .1)
+
